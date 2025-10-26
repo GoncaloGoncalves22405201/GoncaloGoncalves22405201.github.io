@@ -1,0 +1,238 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+header {
+    background-color: #28a745;
+    color: white;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+main {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+section {
+    margin-bottom: 60px;
+}
+
+h2 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+}
+
+#filtros {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.filtros-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filtros-container > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filtros-container label {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.filtros-container select,
+.filtros-container input[type="text"] {
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+#lista-produtos,
+#produtos-selecionados {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+}
+
+#lista-produtos article,
+#produtos-selecionados article {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    width: 280px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+#lista-produtos article:hover,
+#produtos-selecionados article:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+#lista-produtos article img,
+#produtos-selecionados article img {
+    width: 100%;
+    height: 200px;
+    object-fit: contain;
+    margin-bottom: 15px;
+}
+
+#lista-produtos article h3,
+#produtos-selecionados article h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    min-height: 60px;
+}
+
+#lista-produtos article p,
+#produtos-selecionados article p {
+    margin: 10px 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.price {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #28a745;
+    margin: 15px 0;
+}
+
+button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+#cesto {
+    background-color: #28a745;
+    color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+#cesto h2 {
+    color: white;
+}
+
+#cesto > p {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-top: 30px;
+    font-weight: bold;
+}
+
+#checkout {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+#checkout label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+}
+
+#checkout input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+#checkout input[type="text"] {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    width: 250px;
+}
+
+#btn-comprar {
+    background-color: #28a745;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+}
+
+#btn-comprar:hover {
+    background-color: #218838;
+}
+
+footer {
+    background-color: #28a745;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: 60px;
+}
+
+@media (max-width: 768px) {
+    .filtros-container {
+        flex-direction: column;
+    }
+    
+    #lista-produtos,
+    #produtos-selecionados {
+        justify-content: center;
+    }
+}
