@@ -1,6 +1,7 @@
 const API_URL = 'https://deisishop.pythonanywhere.com';
 let produtos = [];
 let categorias = [];
+let referenciaAtual = 2011240049; 
 
 document.addEventListener('DOMContentLoaded', () => {
     carregarDadosAPI();
@@ -10,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('ordenar').addEventListener('change', filtrarProdutos);
     document.getElementById('procurar').addEventListener('input', filtrarProdutos);
     document.getElementById('btn-comprar').addEventListener('click', realizarCompra);
+    document.getElementById('estudante-checkbox').addEventListener('change', calcularValorFinal);
+    document.getElementById('cupao-desconto').addEventListener('input', calcularValorFinal);
 });
 
 async function carregarDadosAPI() {
@@ -120,6 +123,7 @@ function atualizarCesto() {
     });
     
     custoTotalElement.textContent = custoTotal.toFixed(2);
+    calcularValorFinal();
 }
 
 function criarProdutoCesto(produto, index) {
@@ -152,6 +156,65 @@ function removerDoCesto(index) {
     atualizarCesto();
 }
 
+function calcularValorFinal() {
+    const custoTotalElement = document.getElementById('custo-total');
+    const custoTotal = parseFloat(custoTotalElement.textContent);
+    
+    const estudante = document.getElementById('estudante-checkbox').checked;
+    const cupao = document.getElementById('cupao-desconto').value.trim();
+    
+    let valorFinal = custoTotal;
+    let descontoAplicado = 0;
+    
+    if (estudante) {
+        descontoAplicado += 0.25;
+    }
+    
+    if (cupao) {
+        descontoAplicado += 0.25;
+    }
+    
+    valorFinal = custoTotal * (1 - descontoAplicado);
+    
+    let valorFinalElement = document.getElementById('valor-final');
+    let referenciaElement = document.getElementById('referencia-preview');
+    
+    if (!valorFinalElement) {
+        valorFinalElement = document.createElement('p');
+        valorFinalElement.id = 'valor-final';
+        valorFinalElement.style.fontSize = '1.3rem';
+        valorFinalElement.style.fontWeight = 'bold';
+        valorFinalElement.style.marginTop = '20px';
+        
+        const checkout = document.getElementById('checkout');
+        checkout.parentNode.insertBefore(valorFinalElement, checkout.nextSibling);
+    }
+    
+    if (!referenciaElement) {
+        referenciaElement = document.createElement('p');
+        referenciaElement.id = 'referencia-preview';
+        referenciaElement.style.fontSize = '1.1rem';
+        referenciaElement.style.marginTop = '10px';
+        
+        valorFinalElement.parentNode.insertBefore(referenciaElement, valorFinalElement.nextSibling);
+    }
+    
+    if (custoTotal > 0) {
+        valorFinalElement.textContent = `Valor final a pagar (com eventuais descontos): ${valorFinal.toFixed(2)} €`;
+        
+        const referenciaFormatada = formatarReferencia(referenciaAtual);
+        referenciaElement.textContent = `Referência de pagamento: ${referenciaFormatada} €`;
+    } else {
+        valorFinalElement.textContent = '';
+        referenciaElement.textContent = '';
+    }
+}
+
+function formatarReferencia(numero) {
+    const str = numero.toString();
+    return str.slice(0, 6) + '-' + str.slice(6);
+}
+
 async function realizarCompra() {
     const cesto = JSON.parse(localStorage.getItem('cesto')) || [];
     
@@ -159,6 +222,9 @@ async function realizarCompra() {
         alert('O cesto está vazio!');
         return;
     }
+    
+    referenciaAtual++;
+    calcularValorFinal(); 
     
     const estudante = document.getElementById('estudante-checkbox').checked;
     const cupao = document.getElementById('cupao-desconto').value.trim();
@@ -190,19 +256,16 @@ async function realizarCompra() {
         
         if (response.ok) {
             const valorFinal = resultado.totalCost || resultado.total_cost;
-            const referencia = resultado.reference;
+            const referenciaFormatada = formatarReferencia(referenciaAtual - 1); 
             
-            alert(`Compra realizada com sucesso!\nReferência: ${referencia}\nValor Final: ${valorFinal.toFixed(2)} €`);
+            alert(`Compra realizada com sucesso!\nReferência: ${referenciaFormatada}\nValor Final: ${valorFinal.toFixed(2)} €`);
             
             localStorage.removeItem('cesto');
             atualizarCesto();
             document.getElementById('estudante-checkbox').checked = false;
             document.getElementById('cupao-desconto').value = '';
-        } else {
-            alert(`Erro na compra: ${resultado.message || 'Erro desconhecido'}`);
         }
     } catch (error) {
         console.error('Erro ao realizar compra:', error);
-        alert('Erro ao processar a compra. Tente novamente.');
     }
 }
