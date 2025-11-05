@@ -32,6 +32,12 @@
                         <option value="">Ordenar pelo preço</option>
                         <option value="crescente">Preço Crescente</option>
                         <option value="decrescente">Preço Decrescente</option>
+                        <!-- ========================================================== -->
+                        <!-- MODIFICAÇÃO 3: Adicionar opção de ordenação por rating    -->
+                        <!-- ONDE: Linha 37 (após a opção "Preço Decrescente")         -->
+                        <!-- AÇÃO: Descomentar a linha abaixo                          -->
+                        <!-- ========================================================== -->
+                        <!-- <option value="rating">Melhor Avaliação</option> -->
                     </select>
                 </div>
                 <div>
@@ -57,6 +63,14 @@
                     És estudante do DEISI?
                 </label>
                 <input type="text" id="cupao-desconto" placeholder="Cupão de desconto">
+                
+                <!-- ========================================================== -->
+                <!-- MODIFICAÇÃO 15: Botão para limpar cesto completo          -->
+                <!-- ONDE: Linha 70 (após o input do cupão, antes do btn-comprar) -->
+                <!-- AÇÃO: Descomentar a linha abaixo                          -->
+                <!-- ========================================================== -->
+                <!-- <button id="btn-limpar-cesto">Limpar Cesto Completo</button> -->
+                
                 <button id="btn-comprar">Comprar</button>
             </div>
         </section>

@@ -19,6 +19,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btn-comprar').addEventListener('click', realizarCompra);
     document.getElementById('estudante-checkbox').addEventListener('change', calcularValorFinal);
     document.getElementById('cupao-desconto').addEventListener('input', calcularValorFinal);
+    
+    // ===========================================================================
+    // MODIFICAÇÃO 15 - PASSO 3: Event listener para limpar cesto
+    // ONDE COLOCAR: Aqui, na linha 23 (logo após o addEventListener do cupao-desconto)
+    // AÇÃO: Descomentar a linha abaixo quando implementar a MOD 15
+    // ===========================================================================
+    /*
+    document.getElementById('btn-limpar-cesto').addEventListener('click', limparCesto);
+    */
 });
 
 // ==============================================================================
@@ -28,6 +37,30 @@ document.addEventListener('DOMContentLoaded', function() {
 // .catch(error => {...}): Trata erros
 // ==============================================================================
 function carregarDadosAPI() {
+    // ===========================================================================
+    // MODIFICAÇÃO 1: Ordenar produtos por preço ao carregar (crescente)
+    // ONDE ESTÁ: Função carregarDadosAPI(), linha 40
+    // COMO ATIVAR: Apagar o fetch original (linhas 52-61) e descomentar este
+    // O QUE MUDA: Adiciona "produtos.sort()" na linha 44 (após produtos = data)
+    // ===========================================================================
+    /*
+    fetch(`${API_URL}/products`)
+        .then(response => response.json())
+        .then(data => {
+            produtos = data;
+            // ⬇️ ESTA É A LINHA NOVA (linha 44):
+            produtos.sort(function(a, b) {
+                return a.price - b.price;  // ordem crescente
+            });
+            exibirProdutos(produtos);
+            carregarCategorias();
+        })
+        .catch(error => {
+            console.error('Erro ao carregar produtos:', error);
+        });
+    */
+    
+    // ⬇️ CÓDIGO ORIGINAL (sem modificação) - APAGAR SE USAR MOD 1:
     fetch(`${API_URL}/products`)
         .then(response => response.json())
         .then(data => {
@@ -38,24 +71,6 @@ function carregarDadosAPI() {
         .catch(error => {
             console.error('Erro ao carregar produtos:', error);
         });
-    
-    // ===========================================================================
-    // MODIFICAÇÃO 1: Ordenar produtos por preço ao carregar (crescente)
-    // O que faz: Ordena array de produtos do mais barato ao mais caro
-    // Conceitos: array.sort((a,b) => a.price - b.price)
-    // ===========================================================================
-    /*
-    fetch(`${API_URL}/products`)
-        .then(response => response.json())
-        .then(data => {
-            produtos = data;
-            produtos.sort(function(a, b) {
-                return a.price - b.price;  // ordem crescente
-            });
-            exibirProdutos(produtos);
-            carregarCategorias();
-        })
-    */
 }
 
 // ==============================================================================
@@ -64,6 +79,33 @@ function carregarDadosAPI() {
 // Manipulação do DOM - Criar e Anexar Elementos
 // ==============================================================================
 function carregarCategorias() {
+    // ===========================================================================
+    // MODIFICAÇÃO 2: Ordenar categorias alfabeticamente
+    // ONDE ESTÁ: Função carregarCategorias(), linha 78
+    // COMO ATIVAR: Apagar o fetch original (linhas 85-97) e descomentar este
+    // O QUE MUDA: Adiciona "categorias.sort();" na linha 82
+    // ===========================================================================
+    /*
+    fetch(`${API_URL}/categories`)
+        .then(response => response.json())
+        .then(categorias => {
+            // ⬇️ ESTA É A LINHA NOVA (linha 82):
+            categorias.sort();  // ordem alfabética
+            
+            const select = document.getElementById('filtro-categoria');
+            categorias.forEach(function(cat) {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.append(option);
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar categorias:', error);
+        });
+    */
+    
+    // ⬇️ CÓDIGO ORIGINAL (sem modificação) - APAGAR SE USAR MOD 2:
     fetch(`${API_URL}/categories`)
         .then(response => response.json())
         .then(categorias => {
@@ -78,26 +120,6 @@ function carregarCategorias() {
         .catch(error => {
             console.error('Erro ao carregar categorias:', error);
         });
-    
-    // ===========================================================================
-    // MODIFICAÇÃO 2: Ordenar categorias alfabeticamente
-    // O que faz: Ordena array de strings por ordem alfabética
-    // Conceitos: array.sort() - sem callback ordena alfabeticamente
-    // ===========================================================================
-    /*
-    fetch(`${API_URL}/categories`)
-        .then(response => response.json())
-        .then(categorias => {
-            categorias.sort();  // ordem alfabética
-            const select = document.getElementById('filtro-categoria');
-            categorias.forEach(function(cat) {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                select.append(option);
-            });
-        })
-    */
 }
 
 // ==============================================================================
@@ -137,15 +159,12 @@ function filtrarProdutos() {
         });
     }
     
-    exibirProdutos(filtrados);
-    
     // ===========================================================================
     // MODIFICAÇÃO 3: Adicionar ordenação por rating (avaliação)
-    // O que faz: Ordena produtos pela avaliação mais alta primeiro
-    // Conceitos: produto.rating.rate, array.sort()
-    // Passo 1: Adicionar no HTML <select id="ordenar">:
-    //          <option value="rating">Melhor Avaliação</option>
-    // Passo 2: Adicionar após as outras condições de ordenação:
+    // ONDE COLOCAR: Aqui, na linha 160 (após o último else if de ordenacao)
+    // AÇÃO: Descomentar o bloco abaixo
+    // HTML NECESSÁRIO: Adicionar no select#ordenar (linha 28 do HTML):
+    //                  <option value="rating">Melhor Avaliação</option>
     // ===========================================================================
     /*
     else if (ordenacao === 'rating') {
@@ -155,10 +174,12 @@ function filtrarProdutos() {
     }
     */
     
+    exibirProdutos(filtrados);
+    
     // ===========================================================================
     // MODIFICAÇÃO 4: Mostrar contador de produtos encontrados
-    // O que faz: Exibe número de produtos que correspondem aos filtros
-    // Conceitos: document.createElement(), element.append(), array.length
+    // ONDE COLOCAR: Aqui, na linha 177 (após exibirProdutos(filtrados))
+    // AÇÃO: Descomentar o bloco abaixo
     // ===========================================================================
     /*
     if (!document.getElementById('contador-produtos')) {
@@ -193,6 +214,20 @@ function exibirProdutos(lista) {
     lista.forEach(function(produto) {
         const article = document.createElement('article');
         
+        // ===========================================================================
+        // MODIFICAÇÃO 5: Mostrar categoria do produto
+        // ONDE COLOCAR: Aqui, na linha 217 (logo após criar o article)
+        // AÇÃO: Descomentar o bloco abaixo
+        // ORDEM NO ARTICLE: Esta categoria vai ANTES do título
+        // ===========================================================================
+        /*
+        const categoria = document.createElement('p');
+        categoria.className = 'categoria';
+        categoria.textContent = produto.category;
+        categoria.style.fontSize = '0.9rem';
+        categoria.style.color = '#666';
+        */
+        
         const titulo = document.createElement('h3');
         titulo.textContent = produto.title;
         
@@ -204,92 +239,132 @@ function exibirProdutos(lista) {
         preco.className = 'price';
         preco.textContent = `${produto.price.toFixed(2)} €`;
         
+        // ===========================================================================
+        // MODIFICAÇÃO 6: Mostrar rating (avaliação) do produto
+        // ONDE COLOCAR: Aqui, na linha 242 (logo após definir preco.textContent)
+        // AÇÃO: Descomentar o bloco abaixo
+        // ORDEM NO ARTICLE: Este rating vai APÓS o preço
+        // ===========================================================================
+        /*
+        const rating = document.createElement('p');
+        rating.className = 'rating';
+        rating.textContent = `${produto.rating.rate} ★ (${produto.rating.count} avaliações)`;
+        rating.style.color = '#ffa500';
+        */
+        
+        // ===========================================================================
+        // MODIFICAÇÃO 7: Botão toggle para mostrar/ocultar descrição
+        // ONDE COLOCAR: Aqui, na linha 253 (após criar rating ou preco)
+        // AÇÃO: Descomentar o bloco abaixo
+        // ORDEM NO ARTICLE: Descrição e botão toggle vão ANTES do botão adicionar
+        // ===========================================================================
+        /*
+        const descricao = document.createElement('p');
+        descricao.className = 'descricao';
+        descricao.textContent = produto.description;
+        descricao.style.display = 'none';  // escondido inicialmente
+        descricao.style.fontSize = '0.9rem';
+        descricao.style.marginTop = '10px';
+        
+        const btnToggle = document.createElement('button');
+        btnToggle.textContent = 'Ver Descrição';
+        btnToggle.onclick = function() {
+            if (descricao.style.display === 'none') {
+                descricao.style.display = 'block';
+                btnToggle.textContent = 'Esconder Descrição';
+            } else {
+                descricao.style.display = 'none';
+                btnToggle.textContent = 'Ver Descrição';
+            }
+        };
+        */
+        
+        // ===========================================================================
+        // MODIFICAÇÃO 17: Adicionar input para quantidade
+        // ONDE COLOCAR: Aqui, na linha 278 (antes de criar o botão)
+        // AÇÃO: Descomentar o bloco abaixo
+        // ORDEM NO ARTICLE: Input vai ANTES do botão adicionar
+        // ===========================================================================
+        /*
+        const inputQtd = document.createElement('input');
+        inputQtd.type = 'number';
+        inputQtd.min = '1';
+        inputQtd.value = '1';
+        inputQtd.style.width = '60px';
+        inputQtd.style.marginRight = '10px';
+        */
+        
         const botao = document.createElement('button');
         botao.textContent = '+ Adicionar ao Cesto';
+        
+        // ===========================================================================
+        // MODIFICAÇÃO 17 (CONTINUAÇÃO): Modificar onclick do botão
+        // ONDE ESTÁ: Linha 295 (botao.onclick atual)
+        // AÇÃO: Apagar o botao.onclick original (linhas 295-297) e descomentar este
+        // IMPORTANTE: Só funciona se criou o inputQtd acima!
+        // ===========================================================================
+        /*
+        botao.onclick = function() {
+            const quantidade = parseInt(inputQtd.value) || 1;
+            for (let i = 0; i < quantidade; i++) {
+                adicionarAoCesto(produto);
+            }
+        };
+        */
+        
+        // ⬇️ CÓDIGO ORIGINAL (sem modificação) - APAGAR SE USAR MOD 17:
         botao.onclick = function() {
             adicionarAoCesto(produto);
         };
         
+        // ===========================================================================
+        // APPEND DOS ELEMENTOS - ORDEM CORRETA
+        // ONDE ESTÁ: Linhas 314-317
+        // COMO MODIFICAR: Apagar as 4 linhas originais e descomentar o bloco que usar
+        // ===========================================================================
+        
+        // ⬇️ OPÇÃO A: SEM MODIFICAÇÕES (código original)
         article.append(titulo);
         article.append(imagem);
         article.append(preco);
         article.append(botao);
         
+        // ⬇️ OPÇÃO B: COM TODAS AS MODIFICAÇÕES (5, 6, 7, 17)
+        // Apagar as 4 linhas acima e descomentar este bloco:
+        /*
+        article.append(categoria);      // MOD 5
+        article.append(titulo);
+        article.append(imagem);
+        article.append(preco);
+        article.append(rating);         // MOD 6
+        article.append(btnToggle);      // MOD 7
+        article.append(descricao);      // MOD 7
+        article.append(inputQtd);       // MOD 17
+        article.append(botao);
+        */
+        
+        // ⬇️ OPÇÃO C: Só MOD 5 e 6
+        /*
+        article.append(categoria);      // MOD 5
+        article.append(titulo);
+        article.append(imagem);
+        article.append(preco);
+        article.append(rating);         // MOD 6
+        article.append(botao);
+        */
+        
+        // ⬇️ OPÇÃO D: Só MOD 7
+        /*
+        article.append(titulo);
+        article.append(imagem);
+        article.append(preco);
+        article.append(btnToggle);      // MOD 7
+        article.append(descricao);      // MOD 7
+        article.append(botao);
+        */
+        
         container.append(article);
     });
-    
-    // ===========================================================================
-    // MODIFICAÇÃO 5: Mostrar categoria do produto
-    // O que faz: Adiciona a categoria acima do título
-    // Conceitos: document.createElement(), element.textContent, element.style
-    // ===========================================================================
-    /*
-    // Adicionar ANTES do título:
-    const categoria = document.createElement('p');
-    categoria.className = 'categoria';
-    categoria.textContent = produto.category;
-    categoria.style.fontSize = '0.9rem';
-    categoria.style.color = '#666';
-    
-    article.append(categoria);  // adicionar primeiro
-    article.append(titulo);
-    article.append(imagem);
-    article.append(preco);
-    article.append(botao);
-    */
-    
-    // ===========================================================================
-    // MODIFICAÇÃO 6: Mostrar rating (avaliação) do produto
-    // O que faz: Exibe estrelas e número de avaliações abaixo do preço
-    // Conceitos: produto.rating.rate, produto.rating.count
-    // ===========================================================================
-    /*
-    // Adicionar APÓS o preço:
-    const rating = document.createElement('p');
-    rating.className = 'rating';
-    rating.textContent = `${produto.rating.rate} ★ (${produto.rating.count} avaliações)`;
-    rating.style.color = '#ffa500';
-    
-    article.append(titulo);
-    article.append(imagem);
-    article.append(preco);
-    article.append(rating);  // adicionar aqui
-    article.append(botao);
-    */
-    
-    // ===========================================================================
-    // MODIFICAÇÃO 7: Botão toggle para mostrar/ocultar descrição
-    // O que faz: Adiciona botão que alterna visibilidade da descrição completa
-    // Conceitos: element.style.display, onclick, condição if/else
-    // ===========================================================================
-    /*
-    // Adicionar ANTES do botão de adicionar ao cesto:
-    const descricao = document.createElement('p');
-    descricao.className = 'descricao';
-    descricao.textContent = produto.description;
-    descricao.style.display = 'none';  // escondido inicialmente
-    descricao.style.fontSize = '0.9rem';
-    descricao.style.marginTop = '10px';
-    
-    const btnToggle = document.createElement('button');
-    btnToggle.textContent = 'Ver Descrição';
-    btnToggle.onclick = function() {
-        if (descricao.style.display === 'none') {
-            descricao.style.display = 'block';
-            btnToggle.textContent = 'Esconder Descrição';
-        } else {
-            descricao.style.display = 'none';
-            btnToggle.textContent = 'Ver Descrição';
-        }
-    };
-    
-    article.append(titulo);
-    article.append(imagem);
-    article.append(preco);
-    article.append(btnToggle);
-    article.append(descricao);
-    article.append(botao);
-    */
 }
 
 // ==============================================================================
@@ -301,38 +376,11 @@ function exibirProdutos(lista) {
 // array.push(elemento): Adiciona elemento ao fim do array
 // ==============================================================================
 function adicionarAoCesto(produto) {
-    const cesto = getCesto();
-    cesto.push(produto);
-    setCesto(cesto);
-    atualizarCesto();
-    
-    // ===========================================================================
-    // MODIFICAÇÃO 8: Notificação visual ao adicionar produto
-    // O que faz: Mostra mensagem temporária confirmando adição ao cesto
-    // Conceitos: document.createElement(), element.style, setTimeout(), remove()
-    // ===========================================================================
-    /*
-    const notif = document.createElement('div');
-    notif.textContent = `✓ ${produto.title} adicionado ao cesto!`;
-    notif.style.position = 'fixed';
-    notif.style.top = '20px';
-    notif.style.right = '20px';
-    notif.style.backgroundColor = '#27ae60';
-    notif.style.color = 'white';
-    notif.style.padding = '15px 20px';
-    notif.style.borderRadius = '5px';
-    notif.style.zIndex = '1000';
-    document.body.append(notif);
-    
-    setTimeout(function() {
-        notif.remove();
-    }, 2000);  // remove após 2 segundos
-    */
-    
     // ===========================================================================
     // MODIFICAÇÃO 9: Evitar produtos duplicados no cesto
-    // O que faz: Verifica se produto já existe antes de adicionar
-    // Conceitos: array.find(), produto.id, alert()
+    // ONDE ESTÁ: Função adicionarAoCesto() completa, linha 376
+    // COMO ATIVAR: Apagar o conteúdo original (linhas 392-396) e descomentar este
+    // ATENÇÃO: Esta modificação SUBSTITUI todo o conteúdo da função!
     // ===========================================================================
     /*
     const cesto = getCesto();
@@ -353,6 +401,36 @@ function adicionarAoCesto(produto) {
     cesto.push(produto);
     setCesto(cesto);
     atualizarCesto();
+    */
+    
+    // ⬇️ CÓDIGO ORIGINAL (sem modificação) - APAGAR SE USAR MOD 9:
+    const cesto = getCesto();
+    cesto.push(produto);
+    setCesto(cesto);
+    atualizarCesto();
+    
+    // ===========================================================================
+    // MODIFICAÇÃO 8: Notificação visual ao adicionar produto
+    // ONDE COLOCAR: Aqui, na linha 420 (após atualizarCesto())
+    // AÇÃO: Descomentar o bloco abaixo
+    // FUNCIONA COM: Código original OU com MOD 9
+    // ===========================================================================
+    /*
+    const notif = document.createElement('div');
+    notif.textContent = `✓ ${produto.title} adicionado ao cesto!`;
+    notif.style.position = 'fixed';
+    notif.style.top = '20px';
+    notif.style.right = '20px';
+    notif.style.backgroundColor = '#27ae60';
+    notif.style.color = 'white';
+    notif.style.padding = '15px 20px';
+    notif.style.borderRadius = '5px';
+    notif.style.zIndex = '1000';
+    document.body.append(notif);
+    
+    setTimeout(function() {
+        notif.remove();
+    }, 2000);  // remove após 2 segundos
     */
 }
 
@@ -381,6 +459,74 @@ function atualizarCesto() {
     if (cesto.length === 0) {
         container.innerHTML = '<p>O seu cesto está vazio.</p>';
     } else {
+        // ===========================================================================
+        // MODIFICAÇÃO 16: Agrupar produtos repetidos com quantidade
+        // ONDE ESTÁ: Todo o bloco else {} da função, linha 470
+        // COMO ATIVAR: Apagar TODO o else {} original (linhas 470-501) e descomentar
+        // ATENÇÃO: Esta é a modificação MAIS LONGA - substitui 31 linhas!
+        // ===========================================================================
+        /*
+        // Agrupar produtos por ID
+        const produtosAgrupados = {};
+        
+        cesto.forEach(function(produto) {
+            if (produtosAgrupados[produto.id]) {
+                produtosAgrupados[produto.id].quantidade++;
+            } else {
+                produtosAgrupados[produto.id] = {
+                    id: produto.id,
+                    title: produto.title,
+                    image: produto.image,
+                    price: produto.price,
+                    quantidade: 1
+                };
+            }
+        });
+        
+        // Criar elementos para cada grupo
+        for (let id in produtosAgrupados) {
+            const item = produtosAgrupados[id];
+            const article = document.createElement('article');
+            
+            const titulo = document.createElement('h3');
+            titulo.textContent = `${item.title} (x${item.quantidade})`;
+            
+            const imagem = document.createElement('img');
+            imagem.src = item.image;
+            imagem.alt = item.title;
+            
+            const preco = document.createElement('p');
+            preco.className = 'price';
+            const precoTotal = item.price * item.quantidade;
+            preco.textContent = `${precoTotal.toFixed(2)} €`;
+            
+            const botao = document.createElement('button');
+            botao.textContent = '- Remover';
+            botao.onclick = function() {
+                // Encontrar primeira ocorrência do produto no cesto original
+                let index = -1;
+                for (let i = 0; i < cesto.length; i++) {
+                    if (cesto[i].id === item.id) {
+                        index = i;
+                        break;
+                    }
+                }
+                if (index !== -1) {
+                    removerDoCesto(index);
+                }
+            };
+            
+            article.append(titulo);
+            article.append(imagem);
+            article.append(preco);
+            article.append(botao);
+            container.append(article);
+            
+            total = total + (item.price * item.quantidade);
+        }
+        */
+        
+        // ⬇️ CÓDIGO ORIGINAL (sem modificação) - APAGAR SE USAR MOD 16:
         cesto.forEach(function(produto, index) {
             const article = document.createElement('article');
             
@@ -417,8 +563,8 @@ function atualizarCesto() {
     
     // ===========================================================================
     // MODIFICAÇÃO 10: Mostrar contador de produtos no cesto
-    // O que faz: Exibe quantidade total de produtos no cesto
-    // Conceitos: array.length, document.createElement(), element.append()
+    // ONDE COLOCAR: Aqui, na linha 507 (após calcularValorFinal())
+    // AÇÃO: Descomentar o bloco abaixo
     // ===========================================================================
     /*
     if (!document.getElementById('contador-cesto')) {
@@ -452,6 +598,31 @@ function calcularValorFinal() {
         desconto = desconto + 0.25;  // 25%
     }
     
+    // ===========================================================================
+    // MODIFICAÇÃO 11: Validar cupões específicos
+    // ONDE ESTÁ: Linhas 547-550 (verificação do cupão)
+    // COMO ATIVAR: Apagar as 4 linhas originais e descomentar este bloco
+    // ===========================================================================
+    /*
+    const cupao = document.getElementById('cupao-desconto').value.trim().toUpperCase();
+    const cupoesValidos = ['DESCONTO2024', 'PROMO50', 'ESTUDANTE'];
+    
+    let cupaoValido = false;
+    cupoesValidos.forEach(function(c) {
+        if (c === cupao) {
+            cupaoValido = true;
+        }
+    });
+    
+    if (cupaoValido) {
+        desconto = desconto + 0.25;
+    } else if (cupao !== '') {
+        alert('Cupão inválido!');
+        document.getElementById('cupao-desconto').value = '';
+    }
+    */
+    
+    // ⬇️ CÓDIGO ORIGINAL (sem modificação) - APAGAR SE USAR MOD 11:
     // Verificar cupão de desconto
     if (document.getElementById('cupao-desconto').value.trim()) {
         desconto = desconto + 0.25;  // 25%
@@ -489,34 +660,9 @@ function calcularValorFinal() {
     }
     
     // ===========================================================================
-    // MODIFICAÇÃO 11: Validar cupões específicos
-    // O que faz: Só aplica desconto se cupão for válido (lista pré-definida)
-    // Conceitos: array de strings, string.toUpperCase(), comparação
-    // ===========================================================================
-    /*
-    // SUBSTITUIR a verificação do cupão por:
-    const cupao = document.getElementById('cupao-desconto').value.trim().toUpperCase();
-    const cupoesValidos = ['DESCONTO2024', 'PROMO50', 'ESTUDANTE'];
-    
-    let cupaoValido = false;
-    cupoesValidos.forEach(function(c) {
-        if (c === cupao) {
-            cupaoValido = true;
-        }
-    });
-    
-    if (cupaoValido) {
-        desconto = desconto + 0.25;
-    } else if (cupao !== '') {
-        alert('Cupão inválido!');
-        document.getElementById('cupao-desconto').value = '';
-    }
-    */
-    
-    // ===========================================================================
     // MODIFICAÇÃO 12: Mostrar detalhes dos descontos aplicados
-    // O que faz: Exibe texto com tipos de desconto aplicados
-    // Conceitos: concatenação de strings, condições if, element.textContent
+    // ONDE COLOCAR: Aqui, na linha 605 (no final da função, após o último })
+    // AÇÃO: Descomentar o bloco abaixo
     // ===========================================================================
     /*
     if (!document.getElementById('info-desconto')) {
@@ -568,6 +714,19 @@ function realizarCompra() {
         return;
     }
     
+    // ===========================================================================
+    // MODIFICAÇÃO 13: Confirmar antes de finalizar compra
+    // ONDE COLOCAR: Aqui, na linha 662 (logo após o if de cesto vazio)
+    // AÇÃO: Descomentar o bloco abaixo
+    // ===========================================================================
+    /*
+    const totalProdutos = cesto.length;
+    const confirmar = confirm(`Deseja finalizar a compra de ${totalProdutos} produto(s)?`);
+    if (!confirmar) {
+        return;  // cancela a compra
+    }
+    */
+    
     referenciaAtual++;
     calcularValorFinal();
     
@@ -592,6 +751,19 @@ function realizarCompra() {
         dados.coupon = cupao;
     }
     
+    // ===========================================================================
+    // MODIFICAÇÃO 14 - PARTE 1: Desativar botão durante processamento
+    // ONDE COLOCAR: Aqui, na linha 701 (logo após "dados.coupon = cupao;")
+    // AÇÃO: Descomentar o bloco abaixo
+    // IMPORTANTE: Descomentar também as PARTES 2 e 3 mais abaixo!
+    // ===========================================================================
+    /*
+    const botaoComprar = document.getElementById('btn-comprar');
+    const textoOriginal = botaoComprar.textContent;
+    botaoComprar.textContent = 'Processando compra...';
+    botaoComprar.disabled = true;
+    */
+    
     // Enviar pedido POST à API
     fetch(`${API_URL}/buy/`, {
         method: 'POST',
@@ -611,47 +783,31 @@ function realizarCompra() {
         atualizarCesto();
         document.getElementById('estudante-checkbox').checked = false;
         document.getElementById('cupao-desconto').value = '';
+        
+        // ===========================================================================
+        // MODIFICAÇÃO 14 - PARTE 2: Reativar botão após sucesso
+        // ONDE COLOCAR: Aqui, na linha 736 (após limpar cupão)
+        // AÇÃO: Descomentar as 2 linhas abaixo
+        // ===========================================================================
+        /*
+        botaoComprar.textContent = textoOriginal;
+        botaoComprar.disabled = false;
+        */
     })
     .catch(function(error) {
         console.error('Erro ao realizar compra:', error);
         alert('Erro ao realizar compra. Tente novamente.');
+        
+        // ===========================================================================
+        // MODIFICAÇÃO 14 - PARTE 3: Reativar botão após erro
+        // ONDE COLOCAR: Aqui, na linha 749 (após o alert de erro)
+        // AÇÃO: Descomentar as 2 linhas abaixo
+        // ===========================================================================
+        /*
+        botaoComprar.textContent = textoOriginal;
+        botaoComprar.disabled = false;
+        */
     });
-    
-    // ===========================================================================
-    // MODIFICAÇÃO 13: Confirmar antes de finalizar compra
-    // O que faz: Mostra janela de confirmação antes de enviar pedido
-    // Conceitos: confirm(), return (interrompe função)
-    // ===========================================================================
-    /*
-    // Adicionar DEPOIS da verificação if (cesto.length === 0):
-    
-    const totalProdutos = cesto.length;
-    const confirmar = confirm(`Deseja finalizar a compra de ${totalProdutos} produto(s)?`);
-    if (!confirmar) {
-        return;  // cancela a compra
-    }
-    */
-    
-    // ===========================================================================
-    // MODIFICAÇÃO 14: Desativar botão durante processamento
-    // O que faz: Mostra "Processando..." e desativa botão durante compra
-    // Conceitos: element.textContent, element.disabled, variáveis
-    // ===========================================================================
-    /*
-    // Adicionar ANTES do fetch:
-    const botaoComprar = document.getElementById('btn-comprar');
-    const textoOriginal = botaoComprar.textContent;
-    botaoComprar.textContent = 'Processando compra...';
-    botaoComprar.disabled = true;
-    
-    // No .then de sucesso, adicionar no FINAL:
-    botaoComprar.textContent = textoOriginal;
-    botaoComprar.disabled = false;
-    
-    // No .catch, adicionar no FINAL:
-    botaoComprar.textContent = textoOriginal;
-    botaoComprar.disabled = false;
-    */
 }
 
 // ==============================================================================
@@ -677,15 +833,11 @@ function setCesto(cesto) {
 }
 
 // ==============================================================================
-// MODIFICAÇÃO 15: Botão para limpar todo o cesto
-// O que faz: Remove todos os produtos do cesto de uma vez
-// Conceitos: localStorage.removeItem(), confirm(), addEventListener
-// 
-// Passo 1: Adicionar botão no HTML (dentro de <section id="cesto">):
-// <button id="btn-limpar-cesto">Limpar Cesto Completo</button>
-//
-// Passo 2: Adicionar função:
-// ==============================================================================
+// MODIFICAÇÃO 15 - PASSOS 1 e 2: Função para limpar todo o cesto
+// ONDE COLOCAR: Aqui, na linha 785 (após a função setCesto)
+// AÇÃO: Descomentar o bloco abaixo
+// HTML NECESSÁRIO: Ver instruções no ficheiro HTML abaixo
+// ===========================================================================
 /*
 function limparCesto() {
     const cesto = getCesto();
@@ -700,109 +852,4 @@ function limparCesto() {
         atualizarCesto();
     }
 }
-*/
-// Passo 3: Adicionar event listener no DOMContentLoaded:
-/*
-document.getElementById('btn-limpar-cesto').addEventListener('click', limparCesto);
-*/
-
-// ==============================================================================
-// MODIFICAÇÃO 16: Agrupar produtos repetidos com quantidade
-// O que faz: Conta produtos iguais e mostra "Produto x3" em vez de repetir
-// Conceitos: objeto {}, for...in, propriedades de objetos
-// ==============================================================================
-/*
-// SUBSTITUIR todo o else {} da função atualizarCesto() por:
-
-else {
-    // Agrupar produtos por ID
-    const produtosAgrupados = {};
-    
-    cesto.forEach(function(produto) {
-        if (produtosAgrupados[produto.id]) {
-            produtosAgrupados[produto.id].quantidade++;
-        } else {
-            produtosAgrupados[produto.id] = {
-                id: produto.id,
-                title: produto.title,
-                image: produto.image,
-                price: produto.price,
-                quantidade: 1
-            };
-        }
-    });
-    
-    // Criar elementos para cada grupo
-    for (let id in produtosAgrupados) {
-        const item = produtosAgrupados[id];
-        const article = document.createElement('article');
-        
-        const titulo = document.createElement('h3');
-        titulo.textContent = `${item.title} (x${item.quantidade})`;
-        
-        const imagem = document.createElement('img');
-        imagem.src = item.image;
-        imagem.alt = item.title;
-        
-        const preco = document.createElement('p');
-        preco.className = 'price';
-        const precoTotal = item.price * item.quantidade;
-        preco.textContent = `${precoTotal.toFixed(2)} €`;
-        
-        const botao = document.createElement('button');
-        botao.textContent = '- Remover';
-        botao.onclick = function() {
-            // Encontrar primeira ocorrência do produto no cesto original
-            let index = -1;
-            for (let i = 0; i < cesto.length; i++) {
-                if (cesto[i].id === item.id) {
-                    index = i;
-                    break;
-                }
-            }
-            if (index !== -1) {
-                removerDoCesto(index);
-            }
-        };
-        
-        article.append(titulo);
-        article.append(imagem);
-        article.append(preco);
-        article.append(botao);
-        container.append(article);
-        
-        total = total + (item.price * item.quantidade);
-    }
-}
-*/
-
-// ==============================================================================
-// MODIFICAÇÃO 17: Adicionar input para quantidade ao adicionar produto
-// O que faz: Permite escolher quantas unidades adicionar ao cesto
-// Conceitos: input type="number", parseInt(), for loop
-// ==============================================================================
-/*
-// No exibirProdutos(), ANTES do botão de adicionar:
-
-const inputQtd = document.createElement('input');
-inputQtd.type = 'number';
-inputQtd.min = '1';
-inputQtd.value = '1';
-inputQtd.style.width = '60px';
-inputQtd.style.marginRight = '10px';
-
-// MODIFICAR o botao.onclick:
-botao.onclick = function() {
-    const quantidade = parseInt(inputQtd.value) || 1;
-    for (let i = 0; i < quantidade; i++) {
-        adicionarAoCesto(produto);
-    }
-};
-
-// Adicionar ao article:
-article.append(titulo);
-article.append(imagem);
-article.append(preco);
-article.append(inputQtd);  // adicionar input
-article.append(botao);
 */
