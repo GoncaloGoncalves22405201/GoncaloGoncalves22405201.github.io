@@ -1,253 +1,316 @@
 const API_URL = 'https://deisishop.pythonanywhere.com';
 let produtos = [];
-let categorias = [];
-let referenciaAtual = 2011240049; 
+let referenciaAtual = 2011240049;
 
-// =================================
-// A. INICIALIZAÇÃO DA APLICAÇÃO
-// =================================
-// DOMContentLoaded: Evento disparado quando o DOM está completamente construído
-document.addEventListener('DOMContentLoaded', () => {
+// ==============================================================================
+// DOMContentLoaded: Evento disparado quando o DOM está totalmente construído
+// Permite colocar <script> no <head> sem problemas
+// ==============================================================================
+document.addEventListener('DOMContentLoaded', function() {
     carregarDadosAPI();
     atualizarCesto();
     
-    // addEventListener: Associa eventos a elementos
+    // addEventListener: Forma moderna de associar eventos a elementos
+    // addEventListener(evento, handler) - permite múltiplos handlers
     document.getElementById('filtro-categoria').addEventListener('change', filtrarProdutos);
     document.getElementById('ordenar').addEventListener('change', filtrarProdutos);
     document.getElementById('procurar').addEventListener('input', filtrarProdutos);
+    
     document.getElementById('btn-comprar').addEventListener('click', realizarCompra);
     document.getElementById('estudante-checkbox').addEventListener('change', calcularValorFinal);
     document.getElementById('cupao-desconto').addEventListener('input', calcularValorFinal);
 });
 
-// =================================
-// B. FETCH DE DADOS
-// =================================
-// fetch(url): Faz pedidos HTTP e retorna Promise
-// async/await: Forma moderna de lidar com código assíncrono
-async function carregarDadosAPI() {
-    try {
-        const responseProdutos = await fetch(`${API_URL}/products`);
-        produtos = await responseProdutos.json();
-        
-        const responseCategorias = await fetch(`${API_URL}/categories`);
-        categorias = await responseCategorias.json();
-        
-        preencherCategorias();
-        exibirProdutos(produtos);
-    } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-    }
+// ==============================================================================
+// fetch(url): Faz pedidos HTTP assíncronos (AJAX)
+// .then(response => response.json()): Converte resposta para JSON
+// .then(data => {...}): Processa os dados quando chegam
+// .catch(error => {...}): Trata erros
+// ==============================================================================
+function carregarDadosAPI() {
+    fetch(`${API_URL}/products`)
+        .then(response => response.json())
+        .then(data => {
+            produtos = data;
+            exibirProdutos(produtos);
+            carregarCategorias();
+        })
+        .catch(error => {
+            console.error('Erro ao carregar produtos:', error);
+        });
     
-    // MODIFICAÇÃO 1: Ordenar produtos por preço ao carregar
-    // O que faz: Ordena automaticamente do mais barato ao mais caro
+    // ===========================================================================
+    // MODIFICAÇÃO 1: Ordenar produtos por preço ao carregar (crescente)
+    // O que faz: Ordena array de produtos do mais barato ao mais caro
+    // Conceitos: array.sort((a,b) => a.price - b.price)
+    // ===========================================================================
     /*
-    produtos.sort((a, b) => a.price - b.price);
+    fetch(`${API_URL}/products`)
+        .then(response => response.json())
+        .then(data => {
+            produtos = data;
+            produtos.sort(function(a, b) {
+                return a.price - b.price;  // ordem crescente
+            });
+            exibirProdutos(produtos);
+            carregarCategorias();
+        })
     */
 }
 
-// =================================
-// C. FUNÇÕES AUXILIARES
-// =================================
-function preencherCategorias() {
-    const select = document.getElementById('filtro-categoria');
+// ==============================================================================
+// document.createElement(tag): Cria novo elemento HTML
+// element.append(child): Adiciona elemento filho ao elemento pai
+// Manipulação do DOM - Criar e Anexar Elementos
+// ==============================================================================
+function carregarCategorias() {
+    fetch(`${API_URL}/categories`)
+        .then(response => response.json())
+        .then(categorias => {
+            const select = document.getElementById('filtro-categoria');
+            categorias.forEach(function(cat) {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.append(option);
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao carregar categorias:', error);
+        });
     
+    // ===========================================================================
     // MODIFICAÇÃO 2: Ordenar categorias alfabeticamente
-    // O que faz: Mostra categorias em ordem alfabética
+    // O que faz: Ordena array de strings por ordem alfabética
+    // Conceitos: array.sort() - sem callback ordena alfabeticamente
+    // ===========================================================================
     /*
-    categorias.sort();
+    fetch(`${API_URL}/categories`)
+        .then(response => response.json())
+        .then(categorias => {
+            categorias.sort();  // ordem alfabética
+            const select = document.getElementById('filtro-categoria');
+            categorias.forEach(function(cat) {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.append(option);
+            });
+        })
     */
-    
-    // forEach: Percorre array executando função para cada elemento
-    categorias.forEach(categoria => {
-        const option = document.createElement('option');
-        option.value = categoria;
-        option.textContent = categoria;
-        select.appendChild(option);
-    });
 }
 
+// ==============================================================================
+// array.forEach(callback): Percorre array executando função para cada elemento
+// array.sort((a,b) => ...): Ordena array modificando-o
+// string.toLowerCase(): Converte string para minúsculas
+// string.includes(termo): Verifica se string contém termo
+// ==============================================================================
 function filtrarProdutos() {
-    const categoriaFiltro = document.getElementById('filtro-categoria').value;
+    const categoria = document.getElementById('filtro-categoria').value;
     const ordenacao = document.getElementById('ordenar').value;
-    const termoPesquisa = document.getElementById('procurar').value.toLowerCase();
+    const pesquisa = document.getElementById('procurar').value.toLowerCase();
     
-    let produtosFiltrados = [...produtos];
+    // Filtrar produtos usando forEach
+    let filtrados = [];
+    produtos.forEach(function(p) {
+        const categoriaMatch = !categoria || p.category === categoria;
+        const pesquisaMatch = !pesquisa || 
+            p.title.toLowerCase().includes(pesquisa) || 
+            p.description.toLowerCase().includes(pesquisa);
+        
+        if (categoriaMatch && pesquisaMatch) {
+            filtrados.push(p);
+        }
+    });
     
-    // filter: Cria novo array com elementos que satisfazem condição
-    if (categoriaFiltro) {
-        produtosFiltrados = produtosFiltrados.filter(p => p.category === categoriaFiltro);
-    }
-    
-    if (termoPesquisa) {
-        produtosFiltrados = produtosFiltrados.filter(p => 
-            p.title.toLowerCase().includes(termoPesquisa) ||
-            p.description.toLowerCase().includes(termoPesquisa)
-        );
-    }
-    
-    // MODIFICAÇÃO 3: Filtrar por intervalo de preços
-    // O que faz: Filtra produtos entre preço mínimo e máximo
-    // HTML: <input type="number" id="preco-min" placeholder="Preço mínimo">
-    //       <input type="number" id="preco-max" placeholder="Preço máximo">
-    /*
-    const precoMin = parseFloat(document.getElementById('preco-min').value) || 0;
-    const precoMax = parseFloat(document.getElementById('preco-max').value) || 999999;
-    produtosFiltrados = produtosFiltrados.filter(p => p.price >= precoMin && p.price <= precoMax);
-    
-    // Event listeners no DOMContentLoaded:
-    document.getElementById('preco-min').addEventListener('input', filtrarProdutos);
-    document.getElementById('preco-max').addEventListener('input', filtrarProdutos);
-    */
-    
-    // sort: Ordena elementos do array
+    // array.sort(): Ordena array com função de comparação
+    // return a.price - b.price (crescente)
+    // return b.price - a.price (decrescente)
     if (ordenacao === 'crescente') {
-        produtosFiltrados.sort((a, b) => a.price - b.price);
+        filtrados.sort(function(a, b) {
+            return a.price - b.price;
+        });
     } else if (ordenacao === 'decrescente') {
-        produtosFiltrados.sort((a, b) => b.price - a.price);
+        filtrados.sort(function(a, b) {
+            return b.price - a.price;
+        });
     }
     
-    // MODIFICAÇÃO 4: Ordenar por avaliação (rating)
-    // O que faz: Ordena produtos pela melhor avaliação
-    // HTML: <option value="rating">Melhor Avaliação</option>
+    exibirProdutos(filtrados);
+    
+    // ===========================================================================
+    // MODIFICAÇÃO 3: Adicionar ordenação por rating (avaliação)
+    // O que faz: Ordena produtos pela avaliação mais alta primeiro
+    // Conceitos: produto.rating.rate, array.sort()
+    // Passo 1: Adicionar no HTML <select id="ordenar">:
+    //          <option value="rating">Melhor Avaliação</option>
+    // Passo 2: Adicionar após as outras condições de ordenação:
+    // ===========================================================================
     /*
     else if (ordenacao === 'rating') {
-        produtosFiltrados.sort((a, b) => b.rating.rate - a.rating.rate);
+        filtrados.sort(function(a, b) {
+            return b.rating.rate - a.rating.rate;  // maior rating primeiro
+        });
     }
     */
     
-    exibirProdutos(produtosFiltrados);
+    // ===========================================================================
+    // MODIFICAÇÃO 4: Mostrar contador de produtos encontrados
+    // O que faz: Exibe número de produtos que correspondem aos filtros
+    // Conceitos: document.createElement(), element.append(), array.length
+    // ===========================================================================
+    /*
+    if (!document.getElementById('contador-produtos')) {
+        const contador = document.createElement('p');
+        contador.id = 'contador-produtos';
+        contador.style.fontWeight = 'bold';
+        contador.style.marginBottom = '10px';
+        document.getElementById('lista-produtos').parentElement
+            .insertBefore(contador, document.getElementById('lista-produtos'));
+    }
+    document.getElementById('contador-produtos').textContent = 
+        `${filtrados.length} produto(s) encontrado(s)`;
+    */
 }
 
-// MODIFICAÇÃO 5: Botão para limpar filtros
-// O que faz: Remove todos os filtros aplicados
-// HTML: <button id="limpar-filtros">Limpar Filtros</button>
-/*
-function limparFiltros() {
-    document.getElementById('filtro-categoria').value = '';
-    document.getElementById('ordenar').value = '';
-    document.getElementById('procurar').value = '';
-    exibirProdutos(produtos);
-}
-// Event listener no DOMContentLoaded:
-document.getElementById('limpar-filtros').addEventListener('click', limparFiltros);
-*/
-
-function exibirProdutos(listaProdutos) {
+// ==============================================================================
+// element.innerHTML = '': Limpa conteúdo HTML do elemento
+// element.textContent = texto: Define texto do elemento
+// element.className = 'nome': Define classe CSS
+// element.src / element.alt: Define atributos da imagem
+// button.onclick = function(): Associa evento click (forma 2)
+// ==============================================================================
+function exibirProdutos(lista) {
     const container = document.getElementById('lista-produtos');
     container.innerHTML = '';
     
-    if (listaProdutos.length === 0) {
+    if (lista.length === 0) {
         container.innerHTML = '<p class="sem-produtos">Nenhum produto encontrado.</p>';
         return;
     }
     
-    listaProdutos.forEach(produto => {
-        const artigo = criarProduto(produto);
-        container.appendChild(artigo);
-    });
-}
-
-function criarProduto(produto) {
-    const article = document.createElement('article');
-    
-    const titulo = document.createElement('h3');
-    titulo.textContent = produto.title;
-    
-    // MODIFICAÇÃO 9: Destacar termo pesquisado no título
-    // O que faz: Marca termo pesquisado com fundo amarelo
-    /*
-    const termoPesquisa = document.getElementById('procurar').value;
-    if (termoPesquisa) {
-        const regex = new RegExp('(' + termoPesquisa + ')', 'gi');
-        const partes = produto.title.split(regex);
-        titulo.innerHTML = '';
-        partes.forEach(parte => {
-            if (parte.toLowerCase() === termoPesquisa.toLowerCase()) {
-                const mark = document.createElement('mark');
-                mark.textContent = parte;
-                mark.style.backgroundColor = 'yellow';
-                titulo.append(mark);
-            } else {
-                titulo.append(document.createTextNode(parte));
-            }
-        });
-    } else {
+    lista.forEach(function(produto) {
+        const article = document.createElement('article');
+        
+        const titulo = document.createElement('h3');
         titulo.textContent = produto.title;
-    }
+        
+        const imagem = document.createElement('img');
+        imagem.src = produto.image;
+        imagem.alt = produto.title;
+        
+        const preco = document.createElement('p');
+        preco.className = 'price';
+        preco.textContent = `${produto.price.toFixed(2)} €`;
+        
+        const botao = document.createElement('button');
+        botao.textContent = '+ Adicionar ao Cesto';
+        botao.onclick = function() {
+            adicionarAoCesto(produto);
+        };
+        
+        article.append(titulo);
+        article.append(imagem);
+        article.append(preco);
+        article.append(botao);
+        
+        container.append(article);
+    });
+    
+    // ===========================================================================
+    // MODIFICAÇÃO 5: Mostrar categoria do produto
+    // O que faz: Adiciona a categoria acima do título
+    // Conceitos: document.createElement(), element.textContent, element.style
+    // ===========================================================================
+    /*
+    // Adicionar ANTES do título:
+    const categoria = document.createElement('p');
+    categoria.className = 'categoria';
+    categoria.textContent = produto.category;
+    categoria.style.fontSize = '0.9rem';
+    categoria.style.color = '#666';
+    
+    article.append(categoria);  // adicionar primeiro
+    article.append(titulo);
+    article.append(imagem);
+    article.append(preco);
+    article.append(botao);
     */
     
-    const imagem = document.createElement('img');
-    imagem.src = produto.image;
-    imagem.alt = produto.title;
-    
-    const preco = document.createElement('p');
-    preco.className = 'price';
-    preco.textContent = `${produto.price.toFixed(2)} €`;
-    
-    // MODIFICAÇÃO 6: Mostrar descrição do produto
-    // O que faz: Adiciona descrição limitada abaixo do preço
+    // ===========================================================================
+    // MODIFICAÇÃO 6: Mostrar rating (avaliação) do produto
+    // O que faz: Exibe estrelas e número de avaliações abaixo do preço
+    // Conceitos: produto.rating.rate, produto.rating.count
+    // ===========================================================================
     /*
-    const descricao = document.createElement('p');
-    descricao.className = 'descricao';
-    descricao.textContent = produto.description.substring(0, 100) + '...';
-    descricao.style.fontSize = '0.9rem';
-    descricao.style.color = '#666';
-    */
-    
-    // MODIFICAÇÃO 7: Mostrar avaliação (rating) com estrelas
-    // O que faz: Exibe avaliação e número de reviews
-    /*
+    // Adicionar APÓS o preço:
     const rating = document.createElement('p');
     rating.className = 'rating';
     rating.textContent = `${produto.rating.rate} ★ (${produto.rating.count} avaliações)`;
-    rating.style.color = '#f39c12';
-    rating.style.fontWeight = 'bold';
+    rating.style.color = '#ffa500';
+    
+    article.append(titulo);
+    article.append(imagem);
+    article.append(preco);
+    article.append(rating);  // adicionar aqui
+    article.append(botao);
     */
     
-    const botao = document.createElement('button');
-    botao.textContent = '+ Adicionar ao Cesto';
-    botao.addEventListener('click', () => adicionarAoCesto(produto));
-    
-    article.append(titulo, imagem, preco, botao);
-    
-    // MODIFICAÇÃO 8: Botão para ver/ocultar descrição completa
-    // O que faz: Toggle para mostrar descrição completa do produto
+    // ===========================================================================
+    // MODIFICAÇÃO 7: Botão toggle para mostrar/ocultar descrição
+    // O que faz: Adiciona botão que alterna visibilidade da descrição completa
+    // Conceitos: element.style.display, onclick, condição if/else
+    // ===========================================================================
     /*
-    const descricaoCompleta = document.createElement('p');
-    descricaoCompleta.textContent = produto.description;
-    descricaoCompleta.style.display = 'none';
+    // Adicionar ANTES do botão de adicionar ao cesto:
+    const descricao = document.createElement('p');
+    descricao.className = 'descricao';
+    descricao.textContent = produto.description;
+    descricao.style.display = 'none';  // escondido inicialmente
+    descricao.style.fontSize = '0.9rem';
+    descricao.style.marginTop = '10px';
     
-    const btnDetalhes = document.createElement('button');
-    btnDetalhes.textContent = 'Ver Detalhes';
-    btnDetalhes.onclick = function() {
-        if (descricaoCompleta.style.display === 'none') {
-            descricaoCompleta.style.display = 'block';
-            btnDetalhes.textContent = 'Ocultar Detalhes';
+    const btnToggle = document.createElement('button');
+    btnToggle.textContent = 'Ver Descrição';
+    btnToggle.onclick = function() {
+        if (descricao.style.display === 'none') {
+            descricao.style.display = 'block';
+            btnToggle.textContent = 'Esconder Descrição';
         } else {
-            descricaoCompleta.style.display = 'none';
-            btnDetalhes.textContent = 'Ver Detalhes';
+            descricao.style.display = 'none';
+            btnToggle.textContent = 'Ver Descrição';
         }
     };
-    article.append(titulo, imagem, preco, botao, btnDetalhes, descricaoCompleta);
-    */
     
-    return article;
+    article.append(titulo);
+    article.append(imagem);
+    article.append(preco);
+    article.append(btnToggle);
+    article.append(descricao);
+    article.append(botao);
+    */
 }
 
-// =================================
-// D. GESTÃO DO CESTO
-// =================================
+// ==============================================================================
 // localStorage: Armazena dados que persistem após fechar browser
-// JSON.parse/stringify: Converte entre objeto e string JSON
+// localStorage.getItem(chave): Obtém valor
+// localStorage.setItem(chave, valor): Define valor
+// JSON.parse(string): Converte string JSON em objeto JavaScript
+// JSON.stringify(objeto): Converte objeto em string JSON
+// array.push(elemento): Adiciona elemento ao fim do array
+// ==============================================================================
 function adicionarAoCesto(produto) {
-    let cesto = JSON.parse(localStorage.getItem('cesto')) || [];
+    const cesto = getCesto();
     cesto.push(produto);
-    localStorage.setItem('cesto', JSON.stringify(cesto));
+    setCesto(cesto);
     atualizarCesto();
     
-    // MODIFICAÇÃO 10: Notificação ao adicionar produto
-    // O que faz: Mostra mensagem temporária confirmando adição
+    // ===========================================================================
+    // MODIFICAÇÃO 8: Notificação visual ao adicionar produto
+    // O que faz: Mostra mensagem temporária confirmando adição ao cesto
+    // Conceitos: document.createElement(), element.style, setTimeout(), remove()
+    // ===========================================================================
     /*
     const notif = document.createElement('div');
     notif.textContent = `✓ ${produto.title} adicionado ao cesto!`;
@@ -260,391 +323,486 @@ function adicionarAoCesto(produto) {
     notif.style.borderRadius = '5px';
     notif.style.zIndex = '1000';
     document.body.append(notif);
-    setTimeout(() => notif.remove(), 2000);
+    
+    setTimeout(function() {
+        notif.remove();
+    }, 2000);  // remove após 2 segundos
     */
     
-    // MODIFICAÇÃO 11: Impedir adicionar produto duplicado
-    // O que faz: Verifica se produto já existe no cesto
+    // ===========================================================================
+    // MODIFICAÇÃO 9: Evitar produtos duplicados no cesto
+    // O que faz: Verifica se produto já existe antes de adicionar
+    // Conceitos: array.find(), produto.id, alert()
+    // ===========================================================================
     /*
-    let cesto = JSON.parse(localStorage.getItem('cesto')) || [];
-    const jaExiste = cesto.some(item => item.id === produto.id);
+    const cesto = getCesto();
     
-    if (jaExiste) {
-        alert(`${produto.title} já está no cesto!`);
-        return;
+    // Procurar produto existente
+    let produtoExiste = false;
+    cesto.forEach(function(p) {
+        if (p.id === produto.id) {
+            produtoExiste = true;
+        }
+    });
+    
+    if (produtoExiste) {
+        alert('Este produto já está no cesto!');
+        return;  // não adiciona
     }
+    
     cesto.push(produto);
-    localStorage.setItem('cesto', JSON.stringify(cesto));
+    setCesto(cesto);
     atualizarCesto();
     */
 }
 
+// ==============================================================================
+// array.splice(index, quantidade): Remove elementos do array
+// Remove 1 elemento na posição index
+// ==============================================================================
+function removerDoCesto(index) {
+    const cesto = getCesto();
+    cesto.splice(index, 1);
+    setCesto(cesto);
+    atualizarCesto();
+}
+
+// ==============================================================================
+// array.forEach((elemento, indice) => {...}): forEach com índice
+// Permite aceder ao índice de cada elemento durante iteração
+// ==============================================================================
 function atualizarCesto() {
-    const cesto = JSON.parse(localStorage.getItem('cesto')) || [];
+    const cesto = getCesto();
     const container = document.getElementById('produtos-selecionados');
-    const custoTotalElement = document.getElementById('custo-total');
-    
     container.innerHTML = '';
-    let custoTotal = 0;
     
-    cesto.forEach((produto, index) => {
-        const article = criarProdutoCesto(produto, index);
-        container.appendChild(article);
-        custoTotal += produto.price;
-    });
+    let total = 0;
     
-    custoTotalElement.textContent = custoTotal.toFixed(2);
+    if (cesto.length === 0) {
+        container.innerHTML = '<p>O seu cesto está vazio.</p>';
+    } else {
+        cesto.forEach(function(produto, index) {
+            const article = document.createElement('article');
+            
+            const titulo = document.createElement('h3');
+            titulo.textContent = produto.title;
+            
+            const imagem = document.createElement('img');
+            imagem.src = produto.image;
+            imagem.alt = produto.title;
+            
+            const preco = document.createElement('p');
+            preco.className = 'price';
+            preco.textContent = `${produto.price.toFixed(2)} €`;
+            
+            const botao = document.createElement('button');
+            botao.textContent = '- Remover do Cesto';
+            botao.onclick = function() {
+                removerDoCesto(index);
+            };
+            
+            article.append(titulo);
+            article.append(imagem);
+            article.append(preco);
+            article.append(botao);
+            
+            container.append(article);
+            
+            total = total + produto.price;
+        });
+    }
+    
+    document.getElementById('custo-total').textContent = total.toFixed(2);
     calcularValorFinal();
     
-    // MODIFICAÇÃO 12: Mostrar contador de produtos no cesto
-    // O que faz: Exibe quantos produtos estão no cesto
+    // ===========================================================================
+    // MODIFICAÇÃO 10: Mostrar contador de produtos no cesto
+    // O que faz: Exibe quantidade total de produtos no cesto
+    // Conceitos: array.length, document.createElement(), element.append()
+    // ===========================================================================
     /*
     if (!document.getElementById('contador-cesto')) {
         const contador = document.createElement('p');
         contador.id = 'contador-cesto';
         contador.style.fontWeight = 'bold';
+        contador.style.fontSize = '1.1rem';
         contador.style.marginTop = '15px';
-        document.getElementById('cesto').append(contador);
+        document.getElementById('produtos-selecionados').parentElement.append(contador);
     }
-    const texto = cesto.length === 1 ? '1 produto' : `${cesto.length} produtos`;
-    document.getElementById('contador-cesto').textContent = `Total: ${texto}`;
+    
+    document.getElementById('contador-cesto').textContent = 
+        cesto.length === 0 ? '' : `Total de produtos no cesto: ${cesto.length}`;
     */
 }
 
-// MODIFICAÇÃO 14: Botão para limpar todo o cesto
-// O que faz: Remove todos os produtos de uma vez
-// HTML: <button id="btn-limpar-cesto">Limpar Cesto</button>
-/*
-function limparCesto() {
-    const cesto = JSON.parse(localStorage.getItem('cesto')) || [];
-    if (cesto.length === 0) {
-        alert('O cesto já está vazio!');
-        return;
-    }
-    if (confirm('Deseja remover todos os produtos do cesto?')) {
-        localStorage.removeItem('cesto');
-        atualizarCesto();
-    }
-}
-// Event listener no DOMContentLoaded:
-document.getElementById('btn-limpar-cesto').addEventListener('click', limparCesto);
-*/
-
-function criarProdutoCesto(produto, index) {
-    const article = document.createElement('article');
-    
-    const titulo = document.createElement('h3');
-    titulo.textContent = produto.title;
-    
-    const imagem = document.createElement('img');
-    imagem.src = produto.image;
-    imagem.alt = produto.title;
-    
-    const preco = document.createElement('p');
-    preco.className = 'price';
-    preco.textContent = `${produto.price.toFixed(2)} €`;
-    
-    const botao = document.createElement('button');
-    botao.textContent = '- Remover do Cesto';
-    botao.addEventListener('click', () => removerDoCesto(index));
-    
-    article.append(titulo, imagem, preco, botao);
-    return article;
-}
-
-function removerDoCesto(index) {
-    let cesto = JSON.parse(localStorage.getItem('cesto')) || [];
-    
-    // MODIFICAÇÃO 15: Confirmação ao remover produto
-    // O que faz: Pede confirmação antes de remover
-    /*
-    const produto = cesto[index];
-    if (!confirm(`Deseja remover ${produto.title} do cesto?`)) {
-        return;
-    }
-    */
-    
-    // splice: Remove elementos do array
-    cesto.splice(index, 1);
-    localStorage.setItem('cesto', JSON.stringify(cesto));
-    atualizarCesto();
-}
-
-// =================================
-// E. CÁLCULO DE PREÇOS E DESCONTOS
-// =================================
+// ==============================================================================
+// element.style.propriedade: Modifica CSS inline de um elemento
+// parseFloat(string): Converte string para número decimal
+// element.checked: Verifica se checkbox está marcado
+// element.value: Obtém valor de input
+// string.trim(): Remove espaços em branco no início e fim
+// ==============================================================================
 function calcularValorFinal() {
-    const custoTotalElement = document.getElementById('custo-total');
-    const custoTotal = parseFloat(custoTotalElement.textContent);
-    const estudante = document.getElementById('estudante-checkbox').checked;
-    const cupao = document.getElementById('cupao-desconto').value.trim();
+    const total = parseFloat(document.getElementById('custo-total').textContent);
     
-    let valorFinal = custoTotal;
-    let descontoAplicado = 0;
+    let desconto = 0;
     
-    if (estudante) {
-        descontoAplicado += 0.25;
+    // Verificar checkbox de estudante
+    if (document.getElementById('estudante-checkbox').checked) {
+        desconto = desconto + 0.25;  // 25%
     }
     
-    if (cupao) {
-        descontoAplicado += 0.25;
+    // Verificar cupão de desconto
+    if (document.getElementById('cupao-desconto').value.trim()) {
+        desconto = desconto + 0.25;  // 25%
     }
     
-    // MODIFICAÇÃO 17: Validar cupões específicos
-    // O que faz: Só aceita cupões de uma lista predefinida
-    /*
-    const cupoesValidos = ['DESCONTO2024', 'PROMO50', 'BEMVINDO'];
-    if (cupao) {
-        const cupaoValido = cupoesValidos.includes(cupao.toUpperCase());
-        if (cupaoValido) {
-            descontoAplicado += 0.25;
-        } else {
-            alert('Cupão inválido! Cupões válidos: ' + cupoesValidos.join(', '));
-            document.getElementById('cupao-desconto').value = '';
-            return;
-        }
-    }
-    */
+    const valorFinal = total * (1 - desconto);
     
-    // MODIFICAÇÃO 18: Desconto progressivo por valor de compra
-    // O que faz: Aplica descontos automáticos baseados no total
-    /*
-    let descontoProgressivo = 0;
-    if (custoTotal >= 100) {
-        descontoProgressivo = 0.15;
-    } else if (custoTotal >= 50) {
-        descontoProgressivo = 0.10;
-    } else if (custoTotal >= 30) {
-        descontoProgressivo = 0.05;
-    }
-    descontoAplicado += descontoProgressivo;
-    
-    if (descontoProgressivo > 0) {
-        if (!document.getElementById('desconto-progressivo')) {
-            const msg = document.createElement('p');
-            msg.id = 'desconto-progressivo';
-            msg.style.color = '#e74c3c';
-            msg.style.fontWeight = 'bold';
-            document.getElementById('checkout').append(msg);
-        }
-        document.getElementById('desconto-progressivo').textContent = 
-            `Desconto por valor: ${(descontoProgressivo * 100).toFixed(0)}%`;
-    }
-    */
-    
-    valorFinal = custoTotal * (1 - descontoAplicado);
-    
-    let valorFinalElement = document.getElementById('valor-final');
-    let referenciaElement = document.getElementById('referencia-preview');
-    
-    if (!valorFinalElement) {
-        valorFinalElement = document.createElement('p');
-        valorFinalElement.id = 'valor-final';
-        valorFinalElement.style.fontSize = '1.3rem';
-        valorFinalElement.style.fontWeight = 'bold';
-        valorFinalElement.style.marginTop = '20px';
-        const checkout = document.getElementById('checkout');
-        checkout.parentNode.insertBefore(valorFinalElement, checkout.nextSibling);
+    // Criar elemento para valor final se não existir
+    if (!document.getElementById('valor-final')) {
+        const elemValor = document.createElement('p');
+        elemValor.id = 'valor-final';
+        elemValor.style.fontSize = '1.3rem';
+        elemValor.style.fontWeight = 'bold';
+        elemValor.style.marginTop = '20px';
+        document.getElementById('checkout').append(elemValor);
     }
     
-    if (!referenciaElement) {
-        referenciaElement = document.createElement('p');
-        referenciaElement.id = 'referencia-preview';
-        referenciaElement.style.fontSize = '1.1rem';
-        referenciaElement.style.marginTop = '10px';
-        valorFinalElement.parentNode.insertBefore(referenciaElement, valorFinalElement.nextSibling);
+    // Criar elemento para referência se não existir
+    if (!document.getElementById('referencia-preview')) {
+        const elemRef = document.createElement('p');
+        elemRef.id = 'referencia-preview';
+        elemRef.style.fontSize = '1.1rem';
+        elemRef.style.marginTop = '10px';
+        document.getElementById('checkout').append(elemRef);
     }
     
-    if (custoTotal > 0) {
-        valorFinalElement.textContent = `Valor final a pagar (com eventuais descontos): ${valorFinal.toFixed(2)} €`;
-        const referenciaFormatada = formatarReferencia(referenciaAtual);
-        referenciaElement.textContent = `Referência de pagamento: ${referenciaFormatada}`;
+    if (total > 0) {
+        document.getElementById('valor-final').textContent = 
+            `Valor final a pagar (com eventuais descontos): ${valorFinal.toFixed(2)} €`;
+        document.getElementById('referencia-preview').textContent = 
+            `Referência de pagamento: ${formatarReferencia(referenciaAtual)}`;
     } else {
-        valorFinalElement.textContent = '';
-        referenciaElement.textContent = '';
+        document.getElementById('valor-final').textContent = '';
+        document.getElementById('referencia-preview').textContent = '';
     }
     
-    // MODIFICAÇÃO 16: Mostrar detalhes dos descontos aplicados
-    // O que faz: Exibe breakdown dos descontos
+    // ===========================================================================
+    // MODIFICAÇÃO 11: Validar cupões específicos
+    // O que faz: Só aplica desconto se cupão for válido (lista pré-definida)
+    // Conceitos: array de strings, string.toUpperCase(), comparação
+    // ===========================================================================
     /*
-    if (!document.getElementById('detalhes-desconto')) {
-        const detalhes = document.createElement('p');
-        detalhes.id = 'detalhes-desconto';
-        detalhes.style.marginTop = '10px';
-        detalhes.style.fontSize = '0.95rem';
-        detalhes.style.color = '#27ae60';
-        document.getElementById('checkout').append(detalhes);
+    // SUBSTITUIR a verificação do cupão por:
+    const cupao = document.getElementById('cupao-desconto').value.trim().toUpperCase();
+    const cupoesValidos = ['DESCONTO2024', 'PROMO50', 'ESTUDANTE'];
+    
+    let cupaoValido = false;
+    cupoesValidos.forEach(function(c) {
+        if (c === cupao) {
+            cupaoValido = true;
+        }
+    });
+    
+    if (cupaoValido) {
+        desconto = desconto + 0.25;
+    } else if (cupao !== '') {
+        alert('Cupão inválido!');
+        document.getElementById('cupao-desconto').value = '';
+    }
+    */
+    
+    // ===========================================================================
+    // MODIFICAÇÃO 12: Mostrar detalhes dos descontos aplicados
+    // O que faz: Exibe texto com tipos de desconto aplicados
+    // Conceitos: concatenação de strings, condições if, element.textContent
+    // ===========================================================================
+    /*
+    if (!document.getElementById('info-desconto')) {
+        const info = document.createElement('p');
+        info.id = 'info-desconto';
+        info.style.fontSize = '0.95rem';
+        info.style.color = '#27ae60';
+        info.style.marginTop = '10px';
+        document.getElementById('checkout').append(info);
     }
     
     let textoDesconto = '';
-    if (descontoAplicado > 0) {
-        const descontos = [];
-        if (estudante) descontos.push('25% (Estudante)');
-        if (cupao) descontos.push('25% (Cupão)');
-        textoDesconto = `Descontos: ${descontos.join(' + ')} = ${(descontoAplicado * 100).toFixed(0)}% | Poupança: ${(custoTotal * descontoAplicado).toFixed(2)} €`;
+    if (desconto > 0) {
+        textoDesconto = 'Descontos aplicados: ';
+        if (document.getElementById('estudante-checkbox').checked) {
+            textoDesconto = textoDesconto + '25% estudante ';
+        }
+        if (document.getElementById('cupao-desconto').value.trim()) {
+            textoDesconto = textoDesconto + '+ 25% cupão ';
+        }
+        textoDesconto = textoDesconto + `(Total: ${(desconto * 100).toFixed(0)}%)`;
     }
-    document.getElementById('detalhes-desconto').textContent = textoDesconto;
+    document.getElementById('info-desconto').textContent = textoDesconto;
     */
 }
 
-function formatarReferencia(numero) {
-    const str = numero.toString();
-    return str.slice(0, 6) + '-' + str.slice(6);
+// ==============================================================================
+// string.toString(): Converte número para string
+// string.slice(inicio, fim): Extrai parte da string
+// ==============================================================================
+function formatarReferencia(num) {
+    const str = num.toString();
+    return `${str.slice(0, 6)}-${str.slice(6)}`;
 }
 
-// =================================
-// F. FINALIZAÇÃO DE COMPRA
-// =================================
-async function realizarCompra() {
-    const cesto = JSON.parse(localStorage.getItem('cesto')) || [];
+// ==============================================================================
+// fetch POST: Envia dados ao servidor
+// method: 'POST' - Método HTTP para criar recurso
+// headers: Define tipo de conteúdo (JSON)
+// body: Dados a enviar (tem de ser string JSON)
+// JSON.stringify(objeto): Converte objeto JavaScript em string JSON
+// array.map(callback): Cria novo array aplicando função a cada elemento
+// ==============================================================================
+function realizarCompra() {
+    const cesto = getCesto();
     
     if (cesto.length === 0) {
         alert('O cesto está vazio!');
         return;
     }
     
-    // MODIFICAÇÃO 19: Pedir confirmação antes de finalizar compra
-    // O que faz: Mostra resumo e pede confirmação
-    /*
-    const totalProdutos = cesto.length;
-    const valorTotal = parseFloat(document.getElementById('custo-total').textContent);
-    if (!confirm(`Confirmar compra?\n\nProdutos: ${totalProdutos}\nValor: ${valorTotal.toFixed(2)} €`)) {
-        return;
-    }
-    */
-    
     referenciaAtual++;
-    calcularValorFinal(); 
+    calcularValorFinal();
     
-    const estudante = document.getElementById('estudante-checkbox').checked;
+    // Construir objeto com dados da compra
+    const dados = {
+        products: []
+    };
+    
+    // Extrair IDs dos produtos
+    cesto.forEach(function(p) {
+        dados.products.push(p.id);
+    });
+    
+    // Adicionar desconto de estudante se aplicável
+    if (document.getElementById('estudante-checkbox').checked) {
+        dados.student = true;
+    }
+    
+    // Adicionar cupão se preenchido
     const cupao = document.getElementById('cupao-desconto').value.trim();
-    
-    // MODIFICAÇÃO 21: Validar campos antes de comprar
-    // O que faz: Verifica se cupão está correto
-    /*
     if (cupao) {
-        const cupoesValidos = ['DESCONTO2024', 'PROMO50', 'BEMVINDO'];
-        if (!cupoesValidos.includes(cupao.toUpperCase())) {
-            alert('Cupão inválido! A compra não pode ser finalizada.');
-            return;
-        }
+        dados.coupon = cupao;
+    }
+    
+    // Enviar pedido POST à API
+    fetch(`${API_URL}/buy/`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify(dados)
+    })
+    .then(response => response.json())
+    .then(function(resultado) {
+        const valorFinal = resultado.totalCost || resultado.total_cost;
+        
+        alert(`Compra realizada com sucesso!\nReferência: ${formatarReferencia(referenciaAtual - 1)}\nValor Final: ${valorFinal.toFixed(2)} €`);
+        
+        // Limpar cesto e formulário
+        localStorage.removeItem('cesto');
+        atualizarCesto();
+        document.getElementById('estudante-checkbox').checked = false;
+        document.getElementById('cupao-desconto').value = '';
+    })
+    .catch(function(error) {
+        console.error('Erro ao realizar compra:', error);
+        alert('Erro ao realizar compra. Tente novamente.');
+    });
+    
+    // ===========================================================================
+    // MODIFICAÇÃO 13: Confirmar antes de finalizar compra
+    // O que faz: Mostra janela de confirmação antes de enviar pedido
+    // Conceitos: confirm(), return (interrompe função)
+    // ===========================================================================
+    /*
+    // Adicionar DEPOIS da verificação if (cesto.length === 0):
+    
+    const totalProdutos = cesto.length;
+    const confirmar = confirm(`Deseja finalizar a compra de ${totalProdutos} produto(s)?`);
+    if (!confirmar) {
+        return;  // cancela a compra
     }
     */
     
-    const produtos_ids = cesto.map(p => p.id);
-    const dados = { products: produtos_ids };
+    // ===========================================================================
+    // MODIFICAÇÃO 14: Desativar botão durante processamento
+    // O que faz: Mostra "Processando..." e desativa botão durante compra
+    // Conceitos: element.textContent, element.disabled, variáveis
+    // ===========================================================================
+    /*
+    // Adicionar ANTES do fetch:
+    const botaoComprar = document.getElementById('btn-comprar');
+    const textoOriginal = botaoComprar.textContent;
+    botaoComprar.textContent = 'Processando compra...';
+    botaoComprar.disabled = true;
     
-    if (estudante) dados.student = true;
-    if (cupao) dados.coupon = cupao;
+    // No .then de sucesso, adicionar no FINAL:
+    botaoComprar.textContent = textoOriginal;
+    botaoComprar.disabled = false;
     
-    try {
-        const response = await fetch(`${API_URL}/buy/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dados)
-        });
-        
-        const resultado = await response.json();
-        
-        if (response.ok) {
-            const valorFinal = resultado.totalCost || resultado.total_cost;
-            const referenciaFormatada = formatarReferencia(referenciaAtual - 1);
-            
-            // MODIFICAÇÃO 20: Guardar histórico de compras
-            // O que faz: Armazena todas as compras no localStorage
-            /*
-            let historico = JSON.parse(localStorage.getItem('historico-compras')) || [];
-            historico.push({
-                data: new Date().toLocaleDateString(),
-                hora: new Date().toLocaleTimeString(),
-                referencia: referenciaFormatada,
-                valorFinal: valorFinal,
-                produtos: cesto,
-                totalProdutos: cesto.length
-            });
-            localStorage.setItem('historico-compras', JSON.stringify(historico));
-            */
-            
-            alert(`Compra realizada com sucesso!\nReferência: ${referenciaFormatada}\nValor Final: ${valorFinal.toFixed(2)} €`);
-            
-            localStorage.removeItem('cesto');
-            atualizarCesto();
-            document.getElementById('estudante-checkbox').checked = false;
-            document.getElementById('cupao-desconto').value = '';
-        }
-    } catch (error) {
-        console.error('Erro ao realizar compra:', error);
-        
-        // MODIFICAÇÃO 22: Mensagem de erro personalizada
-        // O que faz: Mostra mensagem específica baseada no erro
-        /*
-        let mensagem = 'Erro ao processar a compra. ';
-        if (error.message.includes('Failed to fetch')) {
-            mensagem += 'Verifique sua conexão.';
-        } else {
-            mensagem += 'Tente novamente mais tarde.';
-        }
-        alert(mensagem);
-        */
-    }
+    // No .catch, adicionar no FINAL:
+    botaoComprar.textContent = textoOriginal;
+    botaoComprar.disabled = false;
+    */
 }
 
-// MODIFICAÇÃO 23: Mostrar histórico de compras
-// O que faz: Cria interface para visualizar compras realizadas
-// HTML: <section id="historico"><h2>Histórico</h2><button id="btn-ver-historico">Ver</button><div id="lista-historico"></div></section>
+// ==============================================================================
+// localStorage.getItem(chave): Recupera dados do localStorage
+// JSON.parse(string): Converte string JSON em objeto/array JavaScript
+// Retorna array vazio [] se não existir dados
+// ==============================================================================
+function getCesto() {
+    const cestoJSON = localStorage.getItem('cesto');
+    if (cestoJSON) {
+        return JSON.parse(cestoJSON);
+    }
+    return [];
+}
+
+// ==============================================================================
+// localStorage.setItem(chave, valor): Guarda dados no localStorage
+// JSON.stringify(objeto): Converte objeto/array em string JSON
+// Dados persistem mesmo após fechar o browser
+// ==============================================================================
+function setCesto(cesto) {
+    localStorage.setItem('cesto', JSON.stringify(cesto));
+}
+
+// ==============================================================================
+// MODIFICAÇÃO 15: Botão para limpar todo o cesto
+// O que faz: Remove todos os produtos do cesto de uma vez
+// Conceitos: localStorage.removeItem(), confirm(), addEventListener
+// 
+// Passo 1: Adicionar botão no HTML (dentro de <section id="cesto">):
+// <button id="btn-limpar-cesto">Limpar Cesto Completo</button>
+//
+// Passo 2: Adicionar função:
+// ==============================================================================
 /*
-function mostrarHistorico() {
-    const historico = JSON.parse(localStorage.getItem('historico-compras')) || [];
-    const container = document.getElementById('lista-historico');
-    container.innerHTML = '';
-    
-    if (historico.length === 0) {
-        container.innerHTML = '<p>Nenhuma compra realizada.</p>';
+function limparCesto() {
+    const cesto = getCesto();
+    if (cesto.length === 0) {
+        alert('O cesto já está vazio!');
         return;
     }
     
-    historico.reverse().forEach((compra, i) => {
-        const div = document.createElement('div');
-        div.style.border = '1px solid #ccc';
-        div.style.padding = '10px';
-        div.style.marginBottom = '10px';
-        div.innerHTML = `
-            <strong>Compra #${historico.length - i}</strong><br>
-            Data: ${compra.data} às ${compra.hora}<br>
-            Referência: ${compra.referencia}<br>
-            Valor: ${compra.valorFinal.toFixed(2)} €<br>
-            Produtos: ${compra.totalProdutos}
-        `;
-        container.append(div);
-    });
+    const confirmar = confirm('Tem certeza que deseja remover todos os produtos?');
+    if (confirmar) {
+        localStorage.removeItem('cesto');
+        atualizarCesto();
+    }
 }
-// Event listener:
-document.getElementById('btn-ver-historico').addEventListener('click', mostrarHistorico);
+*/
+// Passo 3: Adicionar event listener no DOMContentLoaded:
+/*
+document.getElementById('btn-limpar-cesto').addEventListener('click', limparCesto);
 */
 
-// MODIFICAÇÃO 26: Contador de visitas à página
-// O que faz: Conta quantas vezes a página foi carregada
-// Adicionar no DOMContentLoaded:
+// ==============================================================================
+// MODIFICAÇÃO 16: Agrupar produtos repetidos com quantidade
+// O que faz: Conta produtos iguais e mostra "Produto x3" em vez de repetir
+// Conceitos: objeto {}, for...in, propriedades de objetos
+// ==============================================================================
 /*
-let visitas = parseInt(localStorage.getItem('contador-visitas')) || 0;
-visitas++;
-localStorage.setItem('contador-visitas', visitas);
-const msg = document.createElement('p');
-msg.textContent = `Visita número ${visitas}`;
-msg.style.textAlign = 'center';
-msg.style.padding = '10px';
-msg.style.backgroundColor = '#3498db';
-msg.style.color = 'white';
-document.body.insertBefore(msg, document.body.firstChild);
+// SUBSTITUIR todo o else {} da função atualizarCesto() por:
+
+else {
+    // Agrupar produtos por ID
+    const produtosAgrupados = {};
+    
+    cesto.forEach(function(produto) {
+        if (produtosAgrupados[produto.id]) {
+            produtosAgrupados[produto.id].quantidade++;
+        } else {
+            produtosAgrupados[produto.id] = {
+                id: produto.id,
+                title: produto.title,
+                image: produto.image,
+                price: produto.price,
+                quantidade: 1
+            };
+        }
+    });
+    
+    // Criar elementos para cada grupo
+    for (let id in produtosAgrupados) {
+        const item = produtosAgrupados[id];
+        const article = document.createElement('article');
+        
+        const titulo = document.createElement('h3');
+        titulo.textContent = `${item.title} (x${item.quantidade})`;
+        
+        const imagem = document.createElement('img');
+        imagem.src = item.image;
+        imagem.alt = item.title;
+        
+        const preco = document.createElement('p');
+        preco.className = 'price';
+        const precoTotal = item.price * item.quantidade;
+        preco.textContent = `${precoTotal.toFixed(2)} €`;
+        
+        const botao = document.createElement('button');
+        botao.textContent = '- Remover';
+        botao.onclick = function() {
+            // Encontrar primeira ocorrência do produto no cesto original
+            let index = -1;
+            for (let i = 0; i < cesto.length; i++) {
+                if (cesto[i].id === item.id) {
+                    index = i;
+                    break;
+                }
+            }
+            if (index !== -1) {
+                removerDoCesto(index);
+            }
+        };
+        
+        article.append(titulo);
+        article.append(imagem);
+        article.append(preco);
+        article.append(botao);
+        container.append(article);
+        
+        total = total + (item.price * item.quantidade);
+    }
+}
 */
 
-// MODIFICAÇÃO 27: Pesquisa instantânea com debouncing
-// O que faz: Pesquisa com delay para otimizar performance
-// Substituir event listener de procurar por:
+// ==============================================================================
+// MODIFICAÇÃO 17: Adicionar input para quantidade ao adicionar produto
+// O que faz: Permite escolher quantas unidades adicionar ao cesto
+// Conceitos: input type="number", parseInt(), for loop
+// ==============================================================================
 /*
-let timeoutPesquisa;
-document.getElementById('procurar').addEventListener('input', function() {
-    clearTimeout(timeoutPesquisa);
-    timeoutPesquisa = setTimeout(() => filtrarProdutos(), 500);
-});
+// No exibirProdutos(), ANTES do botão de adicionar:
+
+const inputQtd = document.createElement('input');
+inputQtd.type = 'number';
+inputQtd.min = '1';
+inputQtd.value = '1';
+inputQtd.style.width = '60px';
+inputQtd.style.marginRight = '10px';
+
+// MODIFICAR o botao.onclick:
+botao.onclick = function() {
+    const quantidade = parseInt(inputQtd.value) || 1;
+    for (let i = 0; i < quantidade; i++) {
+        adicionarAoCesto(produto);
+    }
+};
+
+// Adicionar ao article:
+article.append(titulo);
+article.append(imagem);
+article.append(preco);
+article.append(inputQtd);  // adicionar input
+article.append(botao);
 */
